@@ -1,17 +1,69 @@
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
-public class Main {
-    public static void main(String[] args) {
-        // Press Alt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-        // Press Shift+F10 or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
+public class main {
+    private int[][] forest;
+    private final AtomicBoolean FOUNDED;
+    private final AtomicInteger CURRENT_ROW;
+    private final Integer SIZE_OF_FOREST;
+    public final Integer COUNT_OF_THREADS;
+    private Thread[] threads;
+    private class Bees extends Thread {
+        public Bees(){
 
-            // Press Shift+F9 to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Ctrl+F8.
-            System.out.println("i = " + i);
         }
+        public void run() {
+            while(!FOUNDED.get() && CURRENT_ROW.get() < SIZE_OF_FOREST) {
+                checkRow(CURRENT_ROW.get());
+                CURRENT_ROW.set(CURRENT_ROW.get() + 1);
+            }
+        }
+    }
+    public main(Integer SIZE_OF_FOREST) {
+        this.SIZE_OF_FOREST = SIZE_OF_FOREST;
+        this.COUNT_OF_THREADS = (int)Math.sqrt(SIZE_OF_FOREST);
+        this.threads = new Thread[COUNT_OF_THREADS];
+        forest = new int[SIZE_OF_FOREST][SIZE_OF_FOREST];
+        for(int i = 0; i < SIZE_OF_FOREST; i++){
+            for(int j = 0; j < SIZE_OF_FOREST; j++) {
+                forest[i][j] = 0;
+            }
+        }
+
+        int column = (int)(Math.random()*SIZE_OF_FOREST);
+        int row = (int)(Math.random()*SIZE_OF_FOREST);
+        System.out.println("Pooh is in row: " + row + " column: " + column);
+        forest[row][row] = 1;
+
+        FOUNDED = new AtomicBoolean(false);
+        CURRENT_ROW = new AtomicInteger(0);
+    }
+    private void checkAllForest(){
+        for(int i = 0; i < COUNT_OF_THREADS; i++){
+            threads[i] = new Bees();
+            threads[i].start();
+        }
+        for(int i = 0; i < COUNT_OF_THREADS; i++){
+            try{
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    private void checkRow(int row) {
+        if(FOUNDED.get()) { return; }
+        System.out.println(Thread.currentThread().getName() + " group of bees in row: " + row);
+        for(int i = 0; i < SIZE_OF_FOREST; i++){
+            if(forest[row][i] == 1){
+                System.out.println(Thread.currentThread().getName() + " pooh was founded in row: " + row);
+                FOUNDED.set(true);
+                break;
+            }
+        }
+    }
+    public static void main(String[] args) {
+        main BeesFindingWinniePooh = new main(100);
+        BeesFindingWinniePooh.checkAllForest();
     }
 }
